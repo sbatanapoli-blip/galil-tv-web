@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - تغيير الكود</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #05060a;
+  color: #fff;
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* 🔒 شاشة القفل الأولى */
+#lockScreen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #05060a 0%, #1a1d29 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+.lock-icon {
+  font-size: 4rem;
+  color: #f59e0b;
+  margin-bottom: 20px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+.lock-box {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.lock-box h2 {
+  color: #f59e0b;
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+}
+.lock-box p {
+  color: #9ca3af;
+  margin-bottom: 30px;
+  font-size: 0.95rem;
+}
+.password-input {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 20px;
+  outline: none;
+  transition: all 0.3s;
+}
+.password-input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+.unlock-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.unlock-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+}
+.error-msg {
+  color: #ef4444;
+  margin-top: 15px;
+  font-size: 0.9rem;
+  display: none;
+}
+.back-btn {
+  margin-top: 20px;
+  padding: 12px 30px;
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+}
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* 📱 لوحة التحكم (تظهر بعد الدخول) */
+#adminPanel {
+  display: none;
+  max-width: 450px;
+  margin: 0 auto;
+  padding-top: 40px;
+}
+.admin-container {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.admin-container h2 {
+  color: #f59e0b;
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+}
+.admin-container > p {
+  color: #9ca3af;
+  margin-bottom: 30px;
+  font-size: 0.95rem;
+}
+.input-group {
+  margin-bottom: 20px;
+  text-align: right;
+}
+.input-group label {
+  display: block;
+  color: #f59e0b;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+input {
+  width: 100%;
+  padding: 15px;
+  border-radius: 12px;
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s;
+}
+input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+.save-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+}
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.4);
+}
+#msg {
+  margin-top: 20px;
+  font-size: 0.95rem;
+  min-height: 24px;
+}
+#msg.success { color: #22c55e; }
+#msg.error { color: #ef4444; }
+</style>
+</head>
+<body>
+
+<!-- 🔒 شاشة القفل الأولى -->
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-icon">
+      <i class="fas fa-lock"></i>
+    </div>
+    <h2>🔐 Admin Panel</h2>
+    <p>هذا القسم خاص بالمسؤولين فقط. الرجاء إدخال الكود السري للمتابعة.</p>
+    
+    <input type="password" id="adminPassword" class="password-input" placeholder="أدخل الكود السري هنا..." autocomplete="off">
+    
+    <button class="unlock-btn" id="unlockBtn">
+      <i class="fas fa-unlock"></i> فتح
+    </button>
+    
+    <div id="errorMsg" class="error-msg">❌ الكود غير صحيح! حاول مرة أخرى.</div>
+  </div>
+</div>
+
+<!-- 📱 لوحة التحكم (تظهر بعد الدخول) -->
+<div id="adminPanel">
+  <div class="admin-container">
+    <div class="lock-icon">
+      <i class="fas fa-key"></i>
+    </div>
+    <h2>⚙️ تغيير كود التطبيق</h2>
+    <p>لوحة التحكم - تعديل كود التفعيل</p>
+    
+    <div class="input-group">
+      <label>🔐 كلمة مرور المسؤول</label>
+      <input type="password" id="adminPass" placeholder="أدخل كلمة المرور">
+    </div>
+    
+    <div class="input-group">
+      <label>🔑 الكود الجديد للتطبيق</label>
+      <input type="text" id="newCode" placeholder="أدخل الكود الجديد (4 أحرف على الأقل)">
+    </div>
+    
+    <button class="save-btn" onclick="changeCode()">
+      <i class="fas fa-save"></i> حفظ الكود الجديد
+    </button>
+    
+    <p id="msg"></p>
+    
+    <button class="back-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+    </button>
+  </div>
+</div>
+
+<script>
+// 🔑 الكود السري للدخول إلى Admin Panel
+const ADMIN_CODE = "admin246810@$";
+
+// 🔐 كلمة مرور المسؤول لتغيير الكود
+const ADMIN_PASSWORD = "wins246810";
+
+// 📦 مفتاح التخزين
+const CODE_STORAGE_KEY = "appCode";
+
+// عناصر شاشة القفل
+const lockScreen = document.getElementById('lockScreen');
+const adminPanel = document.getElementById('adminPanel');
+const passwordInput = document.getElementById('adminPassword');
+const unlockBtn = document.getElementById('unlockBtn');
+const errorMsg = document.getElementById('errorMsg');
+
+// عناصر لوحة التحكم
+const adminPassInput = document.getElementById('adminPass');
+const newCodeInput = document.getElementById('newCode');
+const msg = document.getElementById('msg');
+
+// التحقق عند تحميل الصفحة
+window.addEventListener('load', function() {
+  if (sessionStorage.getItem('adminPanelLoggedIn') === 'true') {
+    showAdminPanel();
+  }
+  passwordInput.focus();
+});
+
+// ==================== شاشة القفل ====================
+
+function checkPassword() {
+  const input = passwordInput.value.trim();
+  
+  if (input === ADMIN_CODE) {
+    sessionStorage.setItem('adminPanelLoggedIn', 'true');
+    showAdminPanel();
+  } else {
+    errorMsg.style.display = 'block';
+    passwordInput.value = '';
+    passwordInput.focus();
+    passwordInput.style.animation = 'shake 0.5s';
+    setTimeout(function() {
+      passwordInput.style.animation = '';
+    }, 500);
+  }
+}
+
+function showAdminPanel() {
+  lockScreen.style.display = 'none';
+  adminPanel.style.display = 'block';
+  adminPassInput.focus();
+}
+
+// ==================== لوحة التحكم ====================
+
+function changeCode() {
+  const pass = adminPassInput.value.trim();
+  const code = newCodeInput.value.trim();
+  
+  // التحقق من كلمة المرور
+  if (pass !== ADMIN_PASSWORD) {
+    msg.textContent = "❌ كلمة مرور خاطئة!";
+    msg.className = "error";
+    return;
+  }
+  
+  // التحقق من الكود الجديد
+  if (!code || code.length < 4) {
+    msg.textContent = "❌ الكود يجب أن يكون 4 أحرف على الأقل!";
+    msg.className = "error";
+    return;
+  }
+  
+  try {
+    // حفظ الكود الجديد
+    localStorage.setItem(CODE_STORAGE_KEY, code);
+    localStorage.removeItem("unlocked");
+    
+    msg.textContent = "✅ تم تغيير الكود بنجاح! الكود الجديد: " + code;
+    msg.className = "success";
+    
+    // تفريغ الحقول
+    adminPassInput.value = "";
+    newCodeInput.value = "";
+    
+  } catch (e) {
+    msg.textContent = "❌ خطأ في الحفظ: " + e.message;
+    msg.className = "error";
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('adminPanelLoggedIn');
+  window.location.reload();
+}
+
+// ==================== الأحداث ====================
+
+unlockBtn.addEventListener('click', checkPassword);
+
+passwordInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') checkPassword();
+});
+
+adminPassInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') changeCode();
+});
+
+newCodeInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') changeCode();
+});
+
+// إضافة تأثير الاهتزاز
+const style = document.createElement('style');
+style.textContent = '@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }';
+document.head.appendChild(style);
+</script>
+
+</body>
+</html>
+
+
+
+              <script>
+                              async function fetchCode() {
+  try {
+    const storedCode = localStorage.getItem("appCode");
+    if (storedCode && storedCode.length >= 4) {
+      return storedCode;
+    }
+    return "A32FC80K411"; // الكود الافتراضي
+  } catch (e) {
+    return "A32FC80K411";
+  }
+}
+
+
+              </script>
+                        </body>
+                        </html>
+                    
