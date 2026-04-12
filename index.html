@@ -748,6 +748,9 @@ const Categories = {
     }  
   }  
 };  
+
+            // 🎯 عداد القنوات لعرض الإعلان بعد كل 3 قنوات
+let channelsWatchedCount = 0;
   
 // ============================================  
 // 📺 Channels Module - Optimized  
@@ -887,15 +890,34 @@ Channels.renderBatch(data, els.channelsList, categoryIcon, categoryId);
       })  
       .then(data => {  
         if (data.success && data.url) {  
-          // ✅ نفس الكود الناجح من AppCreator24
+          // ✅ 1. تشغيل القناة عبر Vexo (نفس الكود الناجح)
           const vexoIntent = 'intent://play?url=' + encodeURIComponent(data.url) +   
                            '#Intent;scheme=vexo;package=com.vexo.player;end';  
           setTimeout(() => { window.location.href = vexoIntent; }, 300);  
+          
+          // ✅ 2. منطق العداد: زيادة العداد وعرض الإعلان بعد 3 قنوات
+          channelsWatchedCount++;
+          console.log('📺 قنوات شوهدت: ' + channelsWatchedCount);
+          
+          if (channelsWatchedCount >= 3) {
+              // إعادة تعيين العداد
+              channelsWatchedCount = 0;
+              
+              // عرض الإعلان البيني بعد ثانيتين من تشغيل القناة
+              setTimeout(() => {
+                  if (window.Android && typeof window.Android.showInterstitialAd === 'function') {
+                      console.log('📢 طلب عرض إعلان بيني');
+                      window.Android.showInterstitialAd();
+                  }
+              }, 2000);
+          }
+          
         } else {  
           showMsg('❌ Error: ' + (data.error || 'Failed'));  
         }  
       })  
       .catch(error => {  
+        console.error('Fetch error:', error);
         showMsg('⚠️ Connection error');  
       });  
 },
