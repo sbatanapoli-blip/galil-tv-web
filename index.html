@@ -64,9 +64,9 @@
     .slide.active { opacity: 1; }
     .hero-content { position: absolute; bottom: 18%; left: 24px; z-index: 2; max-width: 70%; }
     .hero-badge { display: inline-block; padding: 5px 12px; background: var(--accent); color: #000; font-weight: 800; font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; clip-path: polygon(0 0, 100% 0, 92% 100%, 0% 100%); margin-bottom: 10px; }
-    .hero-title { font-size: clamp(1.6rem, 5vw, 2.8rem); font-weight: 900; line-height: 1.05; margin-bottom: 6px; text-transform: uppercase; letter-spacing: -0.5px; text-shadow: 0 4px 12px rgba(0,0,0,0.6); }
+    .hero-title { font-size: clamp(1.6rem, 5vw, 2.8rem); font-weight: 700; line-height: 1.05; margin-bottom: 6px; text-transform: uppercase; letter-spacing: -0.5px; text-shadow: 0 4px 12px rgba(0,0,0,0.6); }
     .hero-desc { font-size: 0.9rem; color: #9ca3af; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .hero-dots { position: absolute; bottom: 22%; right: 20px; display: flex; gap: 8px; z-index: 2; }
+    .hero-dots { position: absolute; bottom: 22%; right: 20px; display: flex; gap: 8px; z-index: 2;display: none !important;}
     .hero-dot { width: 24px; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.2); transition: var(--ease); cursor: pointer; }
     .hero-dot.active { background: var(--accent); width: 40px; box-shadow: 0 0 12px var(--accent-glow); }
 
@@ -171,6 +171,7 @@
     @keyframes shake { 0%, 100% { transform: translateX(-50%); } 25% { transform: translateX(-55%); } 75% { transform: translateX(-45%); } }
     .premium-timer .extend-btn { background: rgba(0,0,0,0.2); border: none; color: inherit; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; margin-left: 8px; cursor: pointer; transition: var(--ease); }
     .premium-timer .extend-btn:hover { background: rgba(0,0,0,0.4); }
+  
   </style>
 </head>
 <body>
@@ -244,19 +245,19 @@
   <!-- 📦 Main App Content -->
   <div class="container">
     <section class="hero" role="region" aria-label="Featured">
-      <div class="slide active" aria-hidden="false"><img src="https://i.postimg.cc/N0K33BcT/galil-tv-logo-red.png" alt="Galil TV" loading="eager" width="500" height="240"></div>
+      <div class="slide active" aria-hidden="false"><img src="https://i.postimg.cc/W1vW32qQ/Screenshot-20260414-230805-Gallery.jpg" alt="Galil TV" loading="eager" width="500" height="240"></div>
       <div class="slide" aria-hidden="true"><img src="https://i.postimg.cc/CxK3Fkz8/Bein_sport_logo.png" alt="Bein Sport" loading="lazy" width="500" height="240"></div>
       <div class="slide" aria-hidden="true"><img src="https://i.postimg.cc/Y9tCPf06/20260303_222958.png" alt="Promo" loading="lazy" width="500" height="240"></div>
       <div class="hero-content">
         <div class="hero-badge"><i class="fas fa-crown"></i> PREMIUM</div>
-        <h1 class="hero-title">Watch Live on Galil TV</h1>
+        <h1 class="hero-title">Watch Live on<span style="color:var(--accent)"> Galil TV</span></h1>
         <p class="hero-desc">Stream your favorite channels in HD quality. Anytime, anywhere.</p>
       </div>
       <div class="hero-dots" id="heroDots" role="tablist"></div>
     </section>
     <nav class="nav-bar">
       <a href="#home" class="nav-item active" tabindex="0"><i class="fas fa-home"></i> Home</a>
-      <a href="#movies" class="nav-item" onclick="showMsg('Coming Soon 🎬');return false;" tabindex="0"><i class="fas fa-film"></i> Movies</a>
+      <a href="match.html" class="nav-item"  tabindex="0"><i class="fas fa-futbol"></i> Matches</a>
       <a href="tg://resolve?domain=galiltv04" class="nav-item" tabindex="0"><i class="fab fa-telegram-plane"></i> Chat</a>
       <a href="abs.html" class="nav-item"  tabindex="0"><i class="fas fa-tools"></i> Dev</a>
       <a href="javascript:void(0)" class="nav-item" onclick="goBack()" tabindex="0"><i class="fas fa-arrow-left"></i> Back</a>
@@ -282,7 +283,7 @@
       DEBOUNCE_DELAY: 150, BATCH_SIZE: 12,
       REWARDED_ADS: {
         enabled: true,
-        premiumCategories: [411, 388, 95, 45],
+        premiumCategories: [388, 330, 45,11,124,19],
         rewardMinutes: 30,
         maxAccumulated: 180,      
         stackEnabled: true,
@@ -339,23 +340,40 @@
       },
       hideError: function() { if (els.errorContainer) els.errorContainer.innerHTML = ''; },
       escapeHtml: function(str) { if(!str) return ''; const d=document.createElement('div'); d.textContent=str; return d.innerHTML; },
-      createCard: function(id, img, label, onClick, type) {
-        const card = document.createElement('div');
-        card.className = 'card'; card.setAttribute('role','listitem'); card.setAttribute('tabindex','0');
-        card.dataset.id = id; card.dataset.type = type || 'category';
-        const media = document.createElement('div'); media.className = 'card-media';
-        const imgEl = document.createElement('img');
-        imgEl.src = img || ''; imgEl.alt = Utils.escapeHtml(label); imgEl.loading = 'lazy';
-        imgEl.decoding = 'async'; imgEl.draggable = false;
-        imgEl.onerror = function() { this.src = 'image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%231a1a1a" width="100" height="100"></rect><text x="50" y="55" text-anchor="middle" fill="%23666" font-size="10">TV</text></svg>'; };
-        if (type === 'channel') { const live = document.createElement('div'); live.className = 'card-live'; live.textContent = 'LIVE'; media.appendChild(live); }
-        media.appendChild(imgEl);
-        const content = document.createElement('div'); content.className = 'card-content';
-        const title = document.createElement('div'); title.className = 'card-title'; title.textContent = Utils.escapeHtml(label);
-        const meta = document.createElement('div'); meta.className = 'card-meta'; meta.innerHTML = '<i class="fas fa-signal"></i> Live Stream';
-        content.appendChild(title); content.appendChild(meta);
-        card.appendChild(media); card.appendChild(content); card._onClick = onClick; return card;
-      },
+      createCard: function(id, img, label, onClick, type, isPremium) {
+  const card = document.createElement('div');
+  card.className = 'card'; card.setAttribute('role','listitem'); card.setAttribute('tabindex','0');
+  card.dataset.id = id; card.dataset.type = type || 'category';
+  const media = document.createElement('div'); media.className = 'card-media';
+  const imgEl = document.createElement('img');
+  imgEl.src = img || ''; imgEl.alt = Utils.escapeHtml(label); imgEl.loading = 'lazy';
+  imgEl.decoding = 'async'; imgEl.draggable = false;
+  imgEl.onerror = function() { this.src = 'image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%231a1a1a" width="100" height="100"></rect><text x="50" y="55" text-anchor="middle" fill="%23666" font-size="10">TV</text></svg>'; };
+  
+  // ✅ إضافة شارة LIVE للقنوات
+  if (type === 'channel') { 
+    const live = document.createElement('div'); 
+    live.className = 'card-live'; 
+    live.textContent = 'LIVE'; 
+    media.appendChild(live); 
+  }
+  
+  // ✅ إضافة شارة VIP للفئات المميزة
+  if (isPremium) {
+    const vip = document.createElement('div');
+    vip.className = 'card-live'; // نستخدم نفس ستايل LIVE لكن بلون مختلف
+    vip.style.background = '#f59e0b'; // لون ذهبي
+    vip.textContent = 'VIP';
+    media.appendChild(vip);
+  }
+  
+  media.appendChild(imgEl);
+  const content = document.createElement('div'); content.className = 'card-content';
+  const title = document.createElement('div'); title.className = 'card-title'; title.textContent = Utils.escapeHtml(label);
+  const meta = document.createElement('div'); meta.className = 'card-meta'; meta.innerHTML = '<i class="fas fa-signal"></i> Live Stream';
+  content.appendChild(title); content.appendChild(meta);
+  card.appendChild(media); card.appendChild(content); card._onClick = onClick; return card;
+},
       createSkeleton: function(count) {
         count = count || 6; const fragment = document.createDocumentFragment();
         for (let i = 0; i < count; i++) { const card = document.createElement('div'); card.className = 'card skeleton';
@@ -738,12 +756,22 @@ if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
             const id = ids[j]; let sel = null;
             for (let k = 0; k < Categories.selected.length; k++) { if (Categories.selected[k].id === id) { sel = Categories.selected[k]; break; } }
             if (sel) {
-              const card = Utils.createCard(sel.id, sel.img, Categories.defaultNames[sel.id] || 'Loading...', () => {
-                if (RewardedAds.isPremium(sel.id)) RewardedAds.checkAndShow(sel.id, Categories.defaultNames[sel.id] || 'Loading...');
-                else Channels.show(sel.id, Categories.defaultNames[sel.id] || 'Loading...');
-              }, 'category');
-              fragment.appendChild(card);
-            }
+  // ✅ تحقق إذا كانت الفئة مميزة
+  const isPremium = RewardedAds.isPremium(sel.id);
+  
+  const card = Utils.createCard(
+    sel.id, 
+    sel.img, 
+    Categories.defaultNames[sel.id] || 'Loading...', 
+    () => {
+      if (isPremium) RewardedAds.checkAndShow(sel.id, Categories.defaultNames[sel.id] || 'Loading...');
+      else Channels.show(sel.id, Categories.defaultNames[sel.id] || 'Loading...');
+    }, 
+    'category',
+    isPremium // ✅ مرر isPremium هنا
+  );
+  fragment.appendChild(card);
+}
           }
         }
         els.categoriesList.innerHTML = ''; els.categoriesList.appendChild(fragment);
@@ -753,10 +781,25 @@ if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
           for (let i = 0; i < cats.length; i++) {
             const cat = cats[i]; const card = els.categoriesList.querySelector('.card[data-id="' + cat.category_id + '"]');
             if (card && cat.category_name) {
-              const span = card.querySelector('.card-title'); if (span) span.textContent = Utils.escapeHtml(cat.category_name);
-              const catId = cat.category_id; const catName = cat.category_name;
-              card._onClick = () => { if (RewardedAds.isPremium(catId)) RewardedAds.checkAndShow(catId, catName); else Channels.show(catId, catName); };
-            }
+  const span = card.querySelector('.card-title'); if (span) span.textContent = Utils.escapeHtml(cat.category_name);
+  const catId = cat.category_id; const catName = cat.category_name;
+  
+  // ✅ إضافة شارة VIP للفئات المميزة من الـ API
+  const isPremium = RewardedAds.isPremium(catId);
+  if (isPremium && !card.querySelector('.card-live:nth-of-type(2)')) {
+    const vip = document.createElement('div');
+    vip.className = 'card-live';
+    vip.style.background = '#ff0000';
+    vip.style.color = '#fff';
+    vip.textContent = 'VIP';
+    card.querySelector('.card-media').appendChild(vip);
+  }
+  
+  card._onClick = () => { 
+    if (isPremium) RewardedAds.checkAndShow(catId, catName); 
+    else Channels.show(catId, catName); 
+  };
+}
           }
         }).catch(err => { console.warn('⚠️ Failed to update category names:', err); Categories.showDefaultNames(); });
       },
