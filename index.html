@@ -581,29 +581,53 @@
       },
       
       preloadAd: function() {
-        if (!CONFIG.REWARDED_ADS.enabled) return;
-        if (this.isTestMode) { console.log('🧪 [TEST MODE] Ad preloaded'); this.isLoaded = true; return; }
-        // ✅ استخدم الجسر مع Android بدلاً من Cordova
-if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
-  window.Android.loadRewardedAd();
-}
-      },
+  if (!CONFIG.REWARDED_ADS.enabled) return;
+  
+  if (this.isTestMode) { 
+    console.log('🧪 [TEST MODE] Ad preloaded'); 
+    this.isLoaded = true; 
+    return; 
+  }
+  
+  // ✅ استخدم الجسر مع Android
+  if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
+    window.Android.loadRewardedAd();
+  } else {
+    // ✅ Fallback: إذا لم يكن Android متاحاً، اعتبر الإعلان محملاً (للتجربة على المتصفح)
+    console.log('⚠️ Android bridge not available, assuming ad loaded for testing');
+    this.isLoaded = true;
+  }
+},
       
       showAd: function() {
-        const btn = document.getElementById('watchAdBtn');
-        const status = document.getElementById('adStatus');
-        if (!this.isLoaded && !this.isTestMode) {
-          status?.classList.remove('hidden'); this.preloadAd();
-          setTimeout(() => { status?.classList.add('hidden'); if (this.isLoaded) this.showAd(); else showMsg('⚠️ Ad not available'); }, 3000);
-          return;
-        }
-        btn.disabled = true; status?.classList.remove('hidden');
-        if (this.isTestMode) { setTimeout(() => this.onAdRewarded(), 1500); }
-        
-        else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
-        window.Android.showRewardedAd();
-        }
-      },
+  const btn = document.getElementById('watchAdBtn');
+  const status = document.getElementById('adStatus');
+  
+  if (!this.isLoaded && !this.isTestMode) {
+    status?.classList.remove('hidden'); 
+    this.preloadAd();
+    setTimeout(() => { 
+      status?.classList.add('hidden'); 
+      if (this.isLoaded) this.showAd(); 
+      else showMsg('⚠️ Ad not available'); 
+    }, 3000);
+    return;
+  }
+  
+  btn.disabled = true; 
+  status?.classList.remove('hidden');
+  
+  if (this.isTestMode) { 
+    setTimeout(() => this.onAdRewarded(), 1500); 
+  }
+  else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
+    window.Android.showRewardedAd();
+  } else {
+    // ✅ Fallback: محاكاة الإعلان إذا لم يكن الجسر متاحاً
+    console.log('⚠️ Android bridge not available, simulating ad for testing');
+    setTimeout(() => this.onAdRewarded(), 1500);
+  }
+},
       
       onAdRewarded: function() {
         if (!this.currentCategoryId) return;
