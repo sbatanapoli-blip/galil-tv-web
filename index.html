@@ -143,7 +143,6 @@
     .modal-desc strong { color: var(--accent); }
     .time-balance { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; color: var(--accent); font-weight: 600; margin-bottom: 16px; }
     .time-balance i { animation: spin 3s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
     .ad-status { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text-muted); font-size: 0.85rem; }
     .ad-spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
     .modal-footer { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); padding-top: 16px; }
@@ -247,7 +246,7 @@
     <section class="hero" role="region" aria-label="Featured">
       <div class="slide active" aria-hidden="false"><img src="https://i.postimg.cc/W1vW32qQ/Screenshot-20260414-230805-Gallery.jpg" alt="Galil TV" loading="eager" width="500" height="240"></div>
       <div class="slide" aria-hidden="true"><img src="https://i.postimg.cc/CxK3Fkz8/Bein_sport_logo.png" alt="Bein Sport" loading="lazy" width="500" height="240"></div>
-      <div class="slide" aria-hidden="true"><img src="https://i.postimg.cc/Y9tCPf06/20260303_222958.png" alt="Promo" loading="lazy" width="500" height="240"></div>
+      <div class="slide" aria-hidden="true"><img src="https://i.postimg.cc/Y9tCPf06/20260303-222958.png" alt="Promo" loading="lazy" width="500" height="240"></div>
       <div class="hero-content">
         <div class="hero-badge"><i class="fas fa-crown"></i> PREMIUM</div>
         <h1 class="hero-title">Watch Live on<span style="color:var(--accent)"> Galil TV</span></h1>
@@ -341,39 +340,37 @@
       hideError: function() { if (els.errorContainer) els.errorContainer.innerHTML = ''; },
       escapeHtml: function(str) { if(!str) return ''; const d=document.createElement('div'); d.textContent=str; return d.innerHTML; },
       createCard: function(id, img, label, onClick, type, isPremium) {
-  const card = document.createElement('div');
-  card.className = 'card'; card.setAttribute('role','listitem'); card.setAttribute('tabindex','0');
-  card.dataset.id = id; card.dataset.type = type || 'category';
-  const media = document.createElement('div'); media.className = 'card-media';
-  const imgEl = document.createElement('img');
-  imgEl.src = img || ''; imgEl.alt = Utils.escapeHtml(label); imgEl.loading = 'lazy';
-  imgEl.decoding = 'async'; imgEl.draggable = false;
-  imgEl.onerror = function() { this.src = 'image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%231a1a1a" width="100" height="100"></rect><text x="50" y="55" text-anchor="middle" fill="%23666" font-size="10">TV</text></svg>'; };
-  
-  // ✅ إضافة شارة LIVE للقنوات
-  if (type === 'channel') { 
-    const live = document.createElement('div'); 
-    live.className = 'card-live'; 
-    live.textContent = 'LIVE'; 
-    media.appendChild(live); 
-  }
-  
-  // ✅ إضافة شارة VIP للفئات المميزة
-  if (isPremium) {
-    const vip = document.createElement('div');
-    vip.className = 'card-live'; // نستخدم نفس ستايل LIVE لكن بلون مختلف
-    vip.style.background = '#f59e0b'; // لون ذهبي
-    vip.textContent = 'VIP';
-    media.appendChild(vip);
-  }
-  
-  media.appendChild(imgEl);
-  const content = document.createElement('div'); content.className = 'card-content';
-  const title = document.createElement('div'); title.className = 'card-title'; title.textContent = Utils.escapeHtml(label);
-  const meta = document.createElement('div'); meta.className = 'card-meta'; meta.innerHTML = '<i class="fas fa-signal"></i> Live Stream';
-  content.appendChild(title); content.appendChild(meta);
-  card.appendChild(media); card.appendChild(content); card._onClick = onClick; return card;
-},
+        const card = document.createElement('div');
+        card.className = 'card'; card.setAttribute('role','listitem'); card.setAttribute('tabindex','0');
+        card.dataset.id = id; card.dataset.type = type || 'category';
+        const media = document.createElement('div'); media.className = 'card-media';
+        const imgEl = document.createElement('img');
+        imgEl.src = img || ''; imgEl.alt = Utils.escapeHtml(label); imgEl.loading = 'lazy';
+        imgEl.decoding = 'async'; imgEl.draggable = false;
+        imgEl.onerror = function() { this.src = 'image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%231a1a1a" width="100" height="100"></rect><text x="50" y="55" text-anchor="middle" fill="%23666" font-size="10">TV</text></svg>'; };
+        
+        if (type === 'channel') { 
+          const live = document.createElement('div'); 
+          live.className = 'card-live'; 
+          live.textContent = 'LIVE'; 
+          media.appendChild(live); 
+        }
+        
+        if (isPremium) {
+          const vip = document.createElement('div');
+          vip.className = 'card-live';
+          vip.style.background = '#f59e0b';
+          vip.textContent = 'VIP';
+          media.appendChild(vip);
+        }
+        
+        media.appendChild(imgEl);
+        const content = document.createElement('div'); content.className = 'card-content';
+        const title = document.createElement('div'); title.className = 'card-title'; title.textContent = Utils.escapeHtml(label);
+        const meta = document.createElement('div'); meta.className = 'card-meta'; meta.innerHTML = '<i class="fas fa-signal"></i> Live Stream';
+        content.appendChild(title); content.appendChild(meta);
+        card.appendChild(media); card.appendChild(content); card._onClick = onClick; return card;
+      },
       createSkeleton: function(count) {
         count = count || 6; const fragment = document.createDocumentFragment();
         for (let i = 0; i < count; i++) { const card = document.createElement('div'); card.className = 'card skeleton';
@@ -581,61 +578,89 @@
       },
       
       preloadAd: function() {
-  if (!CONFIG.REWARDED_ADS.enabled) return;
-  
-  if (this.isTestMode) { 
-    console.log('🧪 [TEST MODE] Ad preloaded'); 
-    this.isLoaded = true; 
-    return; 
-  }
-  
-  // ✅ استخدم الجسر مع Android
-  if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
-    window.Android.loadRewardedAd();
-  } else {
-    // ✅ Fallback: إذا لم يكن Android متاحاً، اعتبر الإعلان محملاً (للتجربة على المتصفح)
-    console.log('⚠️ Android bridge not available, assuming ad loaded for testing');
-    this.isLoaded = true;
-  }
-},
+        if (!CONFIG.REWARDED_ADS.enabled) return;
+        
+        if (this.isTestMode) { 
+          console.log('🧪 [TEST MODE] Ad preloaded'); 
+          this.isLoaded = true; 
+          return; 
+        }
+        
+        if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
+          window.Android.loadRewardedAd();
+        } else {
+          console.log('⚠️ Android bridge not available, assuming ad loaded for testing');
+          this.isLoaded = true;
+        }
+      },
       
       showAd: function() {
-  const btn = document.getElementById('watchAdBtn');
-  const status = document.getElementById('adStatus');
-  
-  if (!this.isLoaded && !this.isTestMode) {
-    status?.classList.remove('hidden'); 
-    this.preloadAd();
-    setTimeout(() => { 
-      status?.classList.add('hidden'); 
-      if (this.isLoaded) this.showAd(); 
-      else showMsg('⚠️ Ad not available'); 
-    }, 3000);
-    return;
-  }
-  
-  btn.disabled = true; 
-  status?.classList.remove('hidden');
-  
-  if (this.isTestMode) { 
-    setTimeout(() => this.onAdRewarded(), 1500); 
-  }
-  else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
-    window.Android.showRewardedAd();
-  } else {
-    // ✅ Fallback: محاكاة الإعلان إذا لم يكن الجسر متاحاً
-    console.log('⚠️ Android bridge not available, simulating ad for testing');
-    setTimeout(() => this.onAdRewarded(), 1500);
-  }
-},
+        const btn = document.getElementById('watchAdBtn');
+        const status = document.getElementById('adStatus');
+        
+        if (!this.isLoaded && !this.isTestMode) {
+          status?.classList.remove('hidden'); 
+          this.preloadAd();
+          setTimeout(() => { 
+            status?.classList.add('hidden'); 
+            if (this.isLoaded) this.showAd(); 
+            else showMsg('⚠️ Ad not available'); 
+          }, 3000);
+          return;
+        }
+        
+        btn.disabled = true; 
+        status?.classList.remove('hidden');
+        
+        if (this.isTestMode) { 
+          setTimeout(() => this.onAdRewarded(), 1500); 
+        }
+        else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
+          window.Android.showRewardedAd();
+        } else {
+          console.log('⚠️ Android bridge not available, simulating ad for testing');
+          setTimeout(() => this.onAdRewarded(), 1500);
+        }
+      },
+      
+      // ✅ دوال الاستقبال من Android
+      onAdLoaded: function() {
+        console.log('✅ Ad loaded from Android');
+        this.isLoaded = true;
+        const btn = document.getElementById('watchAdBtn');
+        if (btn) btn.disabled = false;
+        const status = document.getElementById('adStatus');
+        if (status) status.classList.add('hidden');
+      },
+      
+      onAdFailed: function() {
+        console.log('❌ Ad failed to load');
+        this.isLoaded = false;
+        const status = document.getElementById('adStatus');
+        if (status) status.classList.add('hidden');
+        showMsg('⚠️ Ad not available, please try again');
+      },
       
       onAdRewarded: function() {
+        console.log('🎉 Ad rewarded from Android');
         if (!this.currentCategoryId) return;
         const newTotal = PremiumTime.add(this.currentCategoryId, CONFIG.REWARDED_ADS.rewardMinutes);
         this.hideModal();
         if (CONFIG.REWARDED_ADS.stackEnabled) this.showStackModal(newTotal);
-        else { showMsg(`🎉 +${CONFIG.REWARDED_ADS.rewardMinutes} min! Balance: ${newTotal}`); this.enterCategory(); }
+        else { 
+          showMsg(`🎉 +${CONFIG.REWARDED_ADS.rewardMinutes} min! Balance: ${newTotal}`); 
+          this.enterCategory(); 
+        }
         setTimeout(() => this.preloadAd(), 10000);
+      },
+      
+      onAdNotAvailable: function() {
+        console.log('⚠️ Ad not available');
+        const btn = document.getElementById('watchAdBtn');
+        const status = document.getElementById('adStatus');
+        if (btn) btn.disabled = false;
+        if (status) status.classList.add('hidden');
+        showMsg('⚠️ Ad not ready, please try again');
       },
       
       startConsumptionTimer: function(categoryId) {
@@ -745,7 +770,7 @@
         {id:355,img:"https://i.postimg.cc/CxK3Fkz8/Bein_sport_logo.png"},{id:415,img:"https://i.postimg.cc/CxK3Fkz8/Bein_sport_logo.png"},
         {id:359,img:"https://i.postimg.cc/CxK3Fkz8/Bein_sport_logo.png"},{id:411,img:"https://image2url.com/r2/default/images/1771865388301-dd8eb3af-7b18-4b35-b650-7192ab4fc8c1.jpg"},
         {id:413,img:"https://i.postimg.cc/kMWp9Ncn/20260209002112.jpg"},{id:257,img:"https://i.postimg.cc/0j3Kg4Xc/images.jpg"},
-        {id:45,img:"https://i.postimg.cc/Y9tCPf06/20260303_222958.png"},{id:32,img:"https://i.postimg.cc/yNhW80GP/osn_logo_9.jpg"},
+        {id:45,img:"https://i.postimg.cc/Y9tCPf06/20260303-222958.png"},{id:32,img:"https://i.postimg.cc/yNhW80GP/osn_logo_9.jpg"},
         {id:56,img:"https://i.postimg.cc/7hV7Htq1/19675266-b896-49fe-a66e-a25d0ba33ffe-16x9-1200x676.jpg"},{id:388,img:"https://i.postimg.cc/tJnC8HmJ/primevideo_seo_logo.png"},
         {id:95,img:"https://i.postimg.cc/nzxCXKR0/bein-MEDIA-1024x559.png"},{id:330,img:"https://i.postimg.cc/k5tYtqzX/images_(1).jpg"},
         {id:322,img:"https://i.postimg.cc/9X6kN4PC/gros_plan_du_drapeau_ondulant_du_maroc_textures_interessantes_181624_14367.jpg"},{id:324,img:"https://i.postimg.cc/HLMSRhFC/images_(16).jpg"},
@@ -780,7 +805,6 @@
             const id = ids[j]; let sel = null;
             for (let k = 0; k < Categories.selected.length; k++) { if (Categories.selected[k].id === id) { sel = Categories.selected[k]; break; } }
             if (sel) {
-  // ✅ تحقق إذا كانت الفئة مميزة
   const isPremium = RewardedAds.isPremium(sel.id);
   
   const card = Utils.createCard(
@@ -792,7 +816,7 @@
       else Channels.show(sel.id, Categories.defaultNames[sel.id] || 'Loading...');
     }, 
     'category',
-    isPremium // ✅ مرر isPremium هنا
+    isPremium
   );
   fragment.appendChild(card);
 }
@@ -808,7 +832,6 @@
   const span = card.querySelector('.card-title'); if (span) span.textContent = Utils.escapeHtml(cat.category_name);
   const catId = cat.category_id; const catName = cat.category_name;
   
-  // ✅ إضافة شارة VIP للفئات المميزة من الـ API
   const isPremium = RewardedAds.isPremium(catId);
   if (isPremium && !card.querySelector('.card-live:nth-of-type(2)')) {
     const vip = document.createElement('div');
@@ -879,7 +902,7 @@
       },
       show: function(id, name) {
         if (state.isLoading) return; state.isLoading = true;
-        RewardedAds.cleanup(); // ✅ Cleanup old timer when changing category
+        RewardedAds.cleanup();
         Channels.load(id, name);
         if (window.history && history.pushState) history.pushState({page:'channels', id:id, name:name}, '', '#channels');
         setTimeout(() => { state.isLoading = false; }, 300);
@@ -902,13 +925,9 @@
       })  
       .then(data => {  
         if (data.success && data.url) {  
-          // ✅ تشغيل القناة عبر Vexo
           const vexoIntent = 'intent://play?url=' + encodeURIComponent(data.url) +   
                            '#Intent;scheme=vexo;package=com.vexo.player;end';  
           setTimeout(() => { window.location.href = vexoIntent; }, 300);  
-          
-          // ✅ تم حذف كود الإعلان البيني هنا
-          
         } else {  
           showMsg('❌ Error: ' + (data.error || 'Failed'));  
         }  
@@ -933,7 +952,7 @@
     const Navigation = {
       init: function() { if (window.addEventListener) { window.addEventListener('popstate', function(e) { if ((e.state && e.state.page === 'channels') || window.location.hash === '#channels') Navigation.showCategories(); }, { passive: true }); } },
       showCategories: function() {
-        RewardedAds.cleanup(); // ✅ Cleanup timer when going back to categories
+        RewardedAds.cleanup();
         if (els.channelsPage) els.channelsPage.classList.add('hidden');
         if (els.categoriesPage) els.categoriesPage.classList.remove('hidden');
         state.currentCategory = null;
