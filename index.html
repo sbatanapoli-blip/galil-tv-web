@@ -420,264 +420,295 @@
     // ============================================
     // 🎬 Rewarded Ads Manager - FULL UPDATED
     // ============================================
-    const RewardedAds = {
-      ad: null, isLoaded: false, currentCategoryId: null, isTestMode: false,
-      pendingStack: 0, timerInterval: null, consumptionTimer: null,
-      
-      init: function() {
-        this.setupModalListeners();
-        this.setupStackModalListeners();
-        this.preloadAd();
-      },
-      
-      isPremium: function(categoryId) { return CONFIG.REWARDED_ADS.premiumCategories.includes(parseInt(categoryId)); },
-      
-      checkAndShow: function(categoryId, categoryName) {
-        this.currentCategoryId = categoryId;
-        const remaining = PremiumTime.get(categoryId);
-        if (remaining > 0) {
-          showMsg(`✅ You have ${remaining} minutes - Enjoy watching!`);
-          Channels.load(categoryId, categoryName);
-          this.startConsumptionTimer(categoryId);
-          this.startTimerDisplay(categoryId);
-          return;
-        }
-        this.showModal(categoryName);
-      },
-      
-      showModal: function(categoryName) {
-        const modal = document.getElementById('premiumModal');
-        const title = document.getElementById('premiumTitle');
-        const remainingEl = document.getElementById('remainingMinutes');
-        if (!modal) return;
-        title.textContent = categoryName || 'Exclusive Category';
-        remainingEl.textContent = PremiumTime.get(this.currentCategoryId);
-        modal.classList.remove('hidden');
-        document.getElementById('watchAdBtn').disabled = !this.isLoaded;
-        setTimeout(() => document.getElementById('watchAdBtn')?.focus?.({ preventScroll: true }), 100);
-      },
-      
-      hideModal: function() {
-        const modal = document.getElementById('premiumModal');
-        if (modal) modal.classList.add('hidden');
-        document.getElementById('adStatus')?.classList.add('hidden');
-      },
-      
-      setupModalListeners: function() {
-        const closeBtn = document.getElementById('modalCloseBtn');
-        const backdrop = document.querySelector('#premiumModal .modal-backdrop');
-        const laterBtn = document.getElementById('laterBtn');
-        [closeBtn, backdrop, laterBtn].forEach(el => {
-          el?.addEventListener('click', () => this.hideModal(), { passive: true });
-          el?.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.hideModal(); } });
+    // ============================================
+// 🎬 Rewarded Ads Manager - COMPLETE CODE
+// ============================================
+const RewardedAds = {
+  ad: null, isLoaded: false, currentCategoryId: null, isTestMode: false,
+  pendingStack: 0, timerInterval: null, consumptionTimer: null,
+  
+  init: function() {
+    this.setupModalListeners();
+    this.setupStackModalListeners();
+    this.preloadAd();
+  },
+  
+  isPremium: function(categoryId) { 
+    return CONFIG.REWARDED_ADS.premiumCategories.includes(parseInt(categoryId)); 
+  },
+  
+  checkAndShow: function(categoryId, categoryName) {
+    this.currentCategoryId = categoryId;
+    const remaining = PremiumTime.get(categoryId);
+    if (remaining > 0) {
+      showMsg(`✅ You have ${remaining} minutes - Enjoy watching!`);
+      Channels.load(categoryId, categoryName);
+      this.startConsumptionTimer(categoryId);
+      this.startTimerDisplay(categoryId);
+      return;
+    }
+    this.showModal(categoryName);
+  },
+  
+  showModal: function(categoryName) {
+    const modal = document.getElementById('premiumModal');
+    const title = document.getElementById('premiumTitle');
+    const remainingEl = document.getElementById('remainingMinutes');
+    if (!modal) return;
+    title.textContent = categoryName || 'Exclusive Category';
+    remainingEl.textContent = PremiumTime.get(this.currentCategoryId);
+    modal.classList.remove('hidden');
+    document.getElementById('watchAdBtn').disabled = !this.isLoaded;
+    setTimeout(() => document.getElementById('watchAdBtn')?.focus?.({ preventScroll: true }), 100);
+  },
+  
+  hideModal: function() {
+    const modal = document.getElementById('premiumModal');
+    if (modal) modal.classList.add('hidden');
+    document.getElementById('adStatus')?.classList.add('hidden');
+  },
+  
+  setupModalListeners: function() {
+    const closeBtn = document.getElementById('modalCloseBtn');
+    const backdrop = document.querySelector('#premiumModal .modal-backdrop');
+    const laterBtn = document.getElementById('laterBtn');
+    [closeBtn, backdrop, laterBtn].forEach(el => {
+      el?.addEventListener('click', () => this.hideModal(), { passive: true });
+      el?.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.hideModal(); } });
+    });
+    document.getElementById('watchAdBtn')?.addEventListener('click', () => this.showAd());
+  },
+  
+  setupStackModalListeners: function() {
+    const stackModal = document.getElementById('stackModal');
+    const closeBtn = document.getElementById('stackCloseBtn');
+    const skipBtn = document.getElementById('skipStackBtn');
+    const startBtn = document.getElementById('startWatchingBtn');
+    const stackBtns = document.querySelectorAll('.stack-btn');
+    [closeBtn, skipBtn].forEach(btn => btn?.addEventListener('click', () => { this.hideStackModal(); this.enterCategory(); }));
+    startBtn?.addEventListener('click', () => { this.hideStackModal(); this.enterCategory(); });
+    stackBtns.forEach(btn => btn.addEventListener('click', () => this.stackRewards(parseInt(btn.dataset.add))));
+    stackModal?.querySelector('.modal-backdrop')?.addEventListener('click', () => { this.hideStackModal(); this.enterCategory(); });
+  },
+  
+  showStackModal: function(currentBalance) {
+    const modal = document.getElementById('stackModal');
+    const balanceEl = document.getElementById('stackCurrentBalance');
+    const stackBtns = document.querySelectorAll('.stack-btn');
+    if (!modal) return;
+    balanceEl.textContent = currentBalance;
+    const max = CONFIG.REWARDED_ADS.maxAccumulated;
+    stackBtns.forEach(btn => {
+      const add = parseInt(btn.dataset.add);
+      btn.disabled = (currentBalance + add) > max;
+      btn.style.opacity = btn.disabled ? '0.5' : '1';
+    });
+    modal.classList.remove('hidden');
+    setTimeout(() => document.getElementById('startWatchingBtn')?.focus?.({ preventScroll: true }), 100);
+  },
+  
+  hideStackModal: function() {
+    const modal = document.getElementById('stackModal');
+    if (modal) modal.classList.add('hidden');
+  },
+  
+  stackRewards: function(minutesToAdd) {
+    const btn = event?.target?.closest('.stack-btn');
+    if (btn) { btn.classList.add('active'); btn.innerHTML = `<div class="ad-spinner"></div><span>Processing...</span>`; btn.disabled = true; }
+    const adCount = minutesToAdd / CONFIG.REWARDED_ADS.rewardMinutes;
+    let watched = 0;
+    const watchNext = () => {
+      if (watched >= adCount) {
+        const newTotal = PremiumTime.add(this.currentCategoryId, minutesToAdd);
+        document.getElementById('stackCurrentBalance').textContent = newTotal;
+        document.querySelectorAll('.stack-btn').forEach(b => {
+          b.classList.remove('active'); b.disabled = false;
+          b.innerHTML = b.dataset.add === '30' ? `<i class="fas fa-plus-circle"></i><span>+30 Min</span><small>1 Ad</small>` :
+                        b.dataset.add === '60' ? `<i class="fas fa-plus-circle"></i><span>+60 Min</span><small>2 Ads</small>` :
+                        `<i class="fas fa-crown"></i><span>+90 Min</span><small>3 Ads</small>`;
         });
-        document.getElementById('watchAdBtn')?.addEventListener('click', () => this.showAd());
-      },
-      
-      setupStackModalListeners: function() {
-        const stackModal = document.getElementById('stackModal');
-        const closeBtn = document.getElementById('stackCloseBtn');
-        const skipBtn = document.getElementById('skipStackBtn');
-        const startBtn = document.getElementById('startWatchingBtn');
-        const stackBtns = document.querySelectorAll('.stack-btn');
-        [closeBtn, skipBtn].forEach(btn => btn?.addEventListener('click', () => { this.hideStackModal(); this.enterCategory(); }));
-        startBtn?.addEventListener('click', () => { this.hideStackModal(); this.enterCategory(); });
-        stackBtns.forEach(btn => btn.addEventListener('click', () => this.stackRewards(parseInt(btn.dataset.add))));
-        stackModal?.querySelector('.modal-backdrop')?.addEventListener('click', () => { this.hideStackModal(); this.enterCategory(); });
-      },
-      
-      showStackModal: function(currentBalance) {
-        const modal = document.getElementById('stackModal');
-        const balanceEl = document.getElementById('stackCurrentBalance');
-        const stackBtns = document.querySelectorAll('.stack-btn');
-        if (!modal) return;
-        balanceEl.textContent = currentBalance;
-        const max = CONFIG.REWARDED_ADS.maxAccumulated;
-        stackBtns.forEach(btn => {
-          const add = parseInt(btn.dataset.add);
-          btn.disabled = (currentBalance + add) > max;
-          btn.style.opacity = btn.disabled ? '0.5' : '1';
-        });
-        modal.classList.remove('hidden');
-        setTimeout(() => document.getElementById('startWatchingBtn')?.focus?.({ preventScroll: true }), 100);
-      },
-      
-      hideStackModal: function() {
-        const modal = document.getElementById('stackModal');
-        if (modal) modal.classList.add('hidden');
-      },
-      
-      stackRewards: function(minutesToAdd) {
-        const btn = event?.target?.closest('.stack-btn');
-        if (btn) { btn.classList.add('active'); btn.innerHTML = `<div class="ad-spinner"></div><span>Processing...</span>`; btn.disabled = true; }
-        const adCount = minutesToAdd / CONFIG.REWARDED_ADS.rewardMinutes;
-        let watched = 0;
-        const watchNext = () => {
-          if (watched >= adCount) {
-            const newTotal = PremiumTime.add(this.currentCategoryId, minutesToAdd);
-            document.getElementById('stackCurrentBalance').textContent = newTotal;
-            document.querySelectorAll('.stack-btn').forEach(b => {
-              b.classList.remove('active'); b.disabled = false;
-              b.innerHTML = b.dataset.add === '30' ? `<i class="fas fa-plus-circle"></i><span>+30 Min</span><small>1 Ad</small>` :
-                            b.dataset.add === '60' ? `<i class="fas fa-plus-circle"></i><span>+60 Min</span><small>2 Ads</small>` :
-                            `<i class="fas fa-crown"></i><span>+90 Min</span><small>3 Ads</small>`;
-            });
-            showMsg(`🎉 Added! Balance: ${newTotal} min`);
-            return;
-          }
-          setTimeout(() => { watched++; if (this.isTestMode) watchNext(); }, this.isTestMode ? 300 : 2000);
-        };
-        watchNext();
-      },
-      
-      enterCategory: function() {
-        if (!this.currentCategoryId) return;
-        Channels.load(this.currentCategoryId, document.getElementById('premiumTitle')?.textContent);
-        this.startConsumptionTimer(this.currentCategoryId);
-        this.startTimerDisplay(this.currentCategoryId);
-      },
-      
-      startTimerDisplay: function(categoryId) {
-        const existing = document.querySelector('.premium-timer');
-        if (existing) existing.remove();
-        const timer = document.createElement('div');
-        timer.className = 'premium-timer';
-        timer.innerHTML = `<i class="fas fa-clock"></i> <span id="timerValue">${PremiumTime.get(categoryId)}</span> min <button class="extend-btn" id="extendTimeBtn">+Time</button>`;
-        const channelsPage = document.getElementById('channelsPage');
-        if (channelsPage) channelsPage.insertBefore(timer, channelsPage.firstChild);
-        
-        this.timerInterval = setInterval(() => {
-          const remaining = PremiumTime.get(categoryId);
-          const valueEl = document.getElementById('timerValue');
-          if (valueEl) valueEl.textContent = remaining;
-          if (remaining <= CONFIG.REWARDED_ADS.lowTimeWarning && remaining > 0) {
-            timer.classList.add('low');
-            if (remaining === CONFIG.REWARDED_ADS.lowTimeWarning) showMsg('⚠️ Only 5 min left! Tap +Time to extend');
-          }
-          if (remaining <= 0) this.onTimeExpired(categoryId);
-        }, 60000);
-        
-        document.getElementById('extendTimeBtn')?.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.showModal(document.getElementById('premiumTitle')?.textContent || 'Exclusive Category');
-        });
-      },
-      
-      onTimeExpired: function(categoryId) {
-        if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
-        if (this.consumptionTimer) { clearInterval(this.consumptionTimer); this.consumptionTimer = null; }
-        const timer = document.querySelector('.premium-timer');
-        if (timer) timer.remove();
-        showMsg('⏰ Premium access expired! Watch an ad to renew');
-        setTimeout(() => {
-          if (document.getElementById('channelsPage')) document.getElementById('channelsPage').classList.add('hidden');
-          if (document.getElementById('categoriesPage')) document.getElementById('categoriesPage').classList.remove('hidden');
-          const title = document.getElementById('channelsTitle');
-          if (title) title.innerHTML = '<i class="fas fa-tv"></i> <span>Channels</span>';
-        }, CONFIG.REWARDED_ADS.autoExitDelay);
-      },
-      
-      preloadAd: function() {
-        if (!CONFIG.REWARDED_ADS.enabled) return;
-        
-        if (this.isTestMode) { 
-          console.log('🧪 [TEST MODE] Ad preloaded'); 
-          this.isLoaded = true; 
-          return; 
-        }
-        
-        if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
-          window.Android.loadRewardedAd();
-        } else {
-          console.log('⚠️ Android bridge not available, assuming ad loaded for testing');
-          this.isLoaded = true;
-        }
-      },
-      
-      showAd: function() {
-        const btn = document.getElementById('watchAdBtn');
-        const status = document.getElementById('adStatus');
-        
-        if (!this.isLoaded && !this.isTestMode) {
-          status?.classList.remove('hidden'); 
-          this.preloadAd();
-          setTimeout(() => { 
-            status?.classList.add('hidden'); 
-            if (this.isLoaded) this.showAd(); 
-            else showMsg('⚠️ Ad not available'); 
-          }, 3000);
-          return;
-        }
-        
-        btn.disabled = true; 
-        status?.classList.remove('hidden');
-        
-        if (this.isTestMode) { 
-          setTimeout(() => this.onAdRewarded(), 1500); 
-        }
-        else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
-          window.Android.showRewardedAd();
-        } else {
-          console.log('⚠️ Android bridge not available, simulating ad for testing');
-          setTimeout(() => this.onAdRewarded(), 1500);
-        }
-      },
-      
-      // ✅ دوال الاستقبال من Android
-      onAdLoaded: function() {
-        console.log('✅ Ad loaded from Android');
-        this.isLoaded = true;
-        const btn = document.getElementById('watchAdBtn');
-        if (btn) btn.disabled = false;
-        const status = document.getElementById('adStatus');
-        if (status) status.classList.add('hidden');
-      },
-      
-      onAdFailed: function() {
-        console.log('❌ Ad failed to load');
-        this.isLoaded = false;
-        const status = document.getElementById('adStatus');
-        if (status) status.classList.add('hidden');
-        showMsg('⚠️ Ad not available, please try again');
-      },
-      
-      onAdRewarded: function() {
-        console.log('🎉 Ad rewarded from Android');
-        if (!this.currentCategoryId) return;
-        const newTotal = PremiumTime.add(this.currentCategoryId, CONFIG.REWARDED_ADS.rewardMinutes);
-        this.hideModal();
-        if (CONFIG.REWARDED_ADS.stackEnabled) this.showStackModal(newTotal);
-        else { 
-          showMsg(`🎉 +${CONFIG.REWARDED_ADS.rewardMinutes} min! Balance: ${newTotal}`); 
-          this.enterCategory(); 
-        }
-        setTimeout(() => this.preloadAd(), 10000);
-      },
-      
-      onAdNotAvailable: function() {
-        console.log('⚠️ Ad not available');
-        const btn = document.getElementById('watchAdBtn');
-        const status = document.getElementById('adStatus');
-        if (btn) btn.disabled = false;
-        if (status) status.classList.add('hidden');
-        showMsg('⚠️ Ad not ready, please try again');
-      },
-      
-      startConsumptionTimer: function(categoryId) {
-        if (this.consumptionTimer) { clearInterval(this.consumptionTimer); this.consumptionTimer = null; }
-        this.consumptionTimer = setInterval(() => {
-          const remaining = PremiumTime.consume(categoryId);
-          if (remaining <= 0) { clearInterval(this.consumptionTimer); this.consumptionTimer = null; }
-        }, 60000);
-      },
-      
-      cleanup: function() {
-        if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
-        if (this.consumptionTimer) { clearInterval(this.consumptionTimer); this.consumptionTimer = null; }
-        const timer = document.querySelector('.premium-timer');
-        if (timer) timer.remove();
+        showMsg(`🎉 Added! Balance: ${newTotal} min`);
+        return;
       }
+      setTimeout(() => { watched++; if (this.isTestMode) watchNext(); }, this.isTestMode ? 300 : 2000);
     };
+    watchNext();
+  },
+  
+  enterCategory: function() {
+    if (!this.currentCategoryId) return;
+    Channels.load(this.currentCategoryId, document.getElementById('premiumTitle')?.textContent);
+    this.startConsumptionTimer(this.currentCategoryId);
+    this.startTimerDisplay(this.currentCategoryId);
+  },
+  
+  startTimerDisplay: function(categoryId) {
+    const existing = document.querySelector('.premium-timer');
+    if (existing) existing.remove();
+    const timer = document.createElement('div');
+    timer.className = 'premium-timer';
+    timer.innerHTML = `<i class="fas fa-clock"></i> <span id="timerValue">${PremiumTime.get(categoryId)}</span> min <button class="extend-btn" id="extendTimeBtn">+Time</button>`;
+    const channelsPage = document.getElementById('channelsPage');
+    if (channelsPage) channelsPage.insertBefore(timer, channelsPage.firstChild);
+    
+    this.timerInterval = setInterval(() => {
+      const remaining = PremiumTime.get(categoryId);
+      const valueEl = document.getElementById('timerValue');
+      if (valueEl) valueEl.textContent = remaining;
+      if (remaining <= CONFIG.REWARDED_ADS.lowTimeWarning && remaining > 0) {
+        timer.classList.add('low');
+        if (remaining === CONFIG.REWARDED_ADS.lowTimeWarning) showMsg('⚠️ Only 5 min left! Tap +Time to extend');
+      }
+      if (remaining <= 0) this.onTimeExpired(categoryId);
+    }, 60000);
+    
+    document.getElementById('extendTimeBtn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.showModal(document.getElementById('premiumTitle')?.textContent || 'Exclusive Category');
+    });
+  },
+  
+  onTimeExpired: function(categoryId) {
+    if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
+    if (this.consumptionTimer) { clearInterval(this.consumptionTimer); this.consumptionTimer = null; }
+    const timer = document.querySelector('.premium-timer');
+    if (timer) timer.remove();
+    showMsg('⏰ Premium access expired! Watch an ad to renew');
+    setTimeout(() => {
+      if (document.getElementById('channelsPage')) document.getElementById('channelsPage').classList.add('hidden');
+      if (document.getElementById('categoriesPage')) document.getElementById('categoriesPage').classList.remove('hidden');
+      const title = document.getElementById('channelsTitle');
+      if (title) title.innerHTML = '<i class="fas fa-tv"></i> <span>Channels</span>';
+    }, CONFIG.REWARDED_ADS.autoExitDelay);
+  },
+  
+  // ✅ PRELOAD AD - MODIFIED
+  preloadAd: function() {
+    if (!CONFIG.REWARDED_ADS.enabled) return;
+    
+    // تنظيف الإعلان القديم
+    this.isLoaded = false;
+    
+    if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
+      window.Android.loadRewardedAd();
+      
+      // مهلة: إذا لم يتم تحميل الإعلان خلال 10 ثواني، حاول مجدداً
+      setTimeout(() => {
+        if (!this.isLoaded) {
+          console.log('⚠️ Ad loading timeout, retrying...');
+          window.Android.loadRewardedAd();
+        }
+      }, 10000);
+    } else {
+      console.log('⚠️ Android bridge not available');
+      this.isLoaded = true;
+    }
+  },
+  
+  // ✅ SHOW AD - MODIFIED
+  showAd: function() {
+    const btn = document.getElementById('watchAdBtn');
+    const status = document.getElementById('adStatus');
+    
+    if (!this.isLoaded && !this.isTestMode) {
+      status?.classList.remove('hidden');
+      btn.disabled = true;
+      
+      // محاولة تحميل الإعلان مرة أخرى
+      if (window.Android && typeof window.Android.refreshRewardedAd === 'function') {
+        window.Android.refreshRewardedAd();
+      } else {
+        this.preloadAd();
+      }
+      
+      // انتظر 5 ثواني ثم حاول مجدداً
+      setTimeout(() => {
+        if (!this.isLoaded) {
+          status?.classList.add('hidden');
+          btn.disabled = false;
+          showMsg('⚠️ Ad not ready, please try again');
+        }
+      }, 5000);
+      return;
+    }
+    
+    btn.disabled = true;
+    status?.classList.remove('hidden');
+    
+    if (this.isTestMode) {
+      setTimeout(() => this.onAdRewarded(), 1500);
+    }
+    else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
+      window.Android.showRewardedAd();
+    } else {
+      setTimeout(() => this.onAdRewarded(), 1500);
+    }
+  },
+  
+  // ✅ RESET AD STATE - NEW FUNCTION
+  resetAdState: function() {
+    this.isLoaded = false;
+    this.preloadAd();
+  },
+  
+  // ✅ RECEIVE FROM ANDROID - AD LOADED
+  onAdLoaded: function() {
+    console.log('✅ Ad loaded from Android');
+    this.isLoaded = true;
+    const btn = document.getElementById('watchAdBtn');
+    if (btn) btn.disabled = false;
+    const status = document.getElementById('adStatus');
+    if (status) status.classList.add('hidden');
+  },
+  
+  // ✅ RECEIVE FROM ANDROID - AD FAILED
+  onAdFailed: function() {
+    console.log('❌ Ad failed to load');
+    this.isLoaded = false;
+    const status = document.getElementById('adStatus');
+    if (status) status.classList.add('hidden');
+    showMsg('⚠️ Ad not available, please try again');
+  },
+  
+  // ✅ RECEIVE FROM ANDROID - AD REWARDED
+  onAdRewarded: function() {
+    console.log('🎉 Ad rewarded from Android');
+    if (!this.currentCategoryId) return;
+    const newTotal = PremiumTime.add(this.currentCategoryId, CONFIG.REWARDED_ADS.rewardMinutes);
+    this.hideModal();
+    if (CONFIG.REWARDED_ADS.stackEnabled) this.showStackModal(newTotal);
+    else { 
+      showMsg(`🎉 +${CONFIG.REWARDED_ADS.rewardMinutes} min! Balance: ${newTotal}`); 
+      this.enterCategory(); 
+    }
+    setTimeout(() => this.preloadAd(), 10000);
+  },
+  
+  // ✅ RECEIVE FROM ANDROID - AD NOT AVAILABLE
+  onAdNotAvailable: function() {
+    console.log('⚠️ Ad not available');
+    const btn = document.getElementById('watchAdBtn');
+    const status = document.getElementById('adStatus');
+    if (btn) btn.disabled = false;
+    if (status) status.classList.add('hidden');
+    showMsg('⚠️ Ad not ready, please try again');
+  },
+  
+  startConsumptionTimer: function(categoryId) {
+    if (this.consumptionTimer) { clearInterval(this.consumptionTimer); this.consumptionTimer = null; }
+    this.consumptionTimer = setInterval(() => {
+      const remaining = PremiumTime.consume(categoryId);
+      if (remaining <= 0) { clearInterval(this.consumptionTimer); this.consumptionTimer = null; }
+    }, 60000);
+  },
+  
+  cleanup: function() {
+    if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
+    if (this.consumptionTimer) { clearInterval(this.consumptionTimer); this.consumptionTimer = null; }
+    const timer = document.querySelector('.premium-timer');
+    if (timer) timer.remove();
+  }
+};
 
     // ============================================
     // 🎠 Hero Slider Module
