@@ -596,66 +596,80 @@ const RewardedAds = {
   
   // ✅ PRELOAD AD - MODIFIED
   preloadAd: function() {
-    if (!CONFIG.REWARDED_ADS.enabled) return;
+  if (!CONFIG.REWARDED_ADS.enabled) return;
+  
+  // تنظيف الإعلان القديم
+  this.isLoaded = false;
+  
+  if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
+    console.log('✅ Android bridge found, loading ad...');
+    window.Android.loadRewardedAd();
     
-    // تنظيف الإعلان القديم
-    this.isLoaded = false;
+    // مهلة: إذا لم يتم تحميل الإعلان خلال 10 ثواني، حاول مجدداً
+    setTimeout(() => {
+      if (!this.isLoaded) {
+        console.log('⚠️ Ad loading timeout, retrying...');
+        window.Android.loadRewardedAd();
+      }
+    }, 10000);
+  } else {
+    console.log('⚠️ Android bridge not available - Retrying in 3s...');
+    this.isLoaded = false;  // ✅ تغيير: اتركه false
     
-    if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
-      window.Android.loadRewardedAd();
-      
-      // مهلة: إذا لم يتم تحميل الإعلان خلال 10 ثواني، حاول مجدداً
-      setTimeout(() => {
-        if (!this.isLoaded) {
-          console.log('⚠️ Ad loading timeout, retrying...');
-          window.Android.loadRewardedAd();
-        }
-      }, 10000);
-    } else {
-      console.log('⚠️ Android bridge not available');
-      this.isLoaded = true;
-    }
-  },
+    // حاول مجدداً بعد 3 ثواني
+    setTimeout(() => {
+      this.preloadAd();
+    }, 3000);
+  }
+},
   
   // ✅ SHOW AD - MODIFIED
   showAd: function() {
-    const btn = document.getElementById('watchAdBtn');
-    const status = document.getElementById('adStatus');
-    
-    if (!this.isLoaded && !this.isTestMode) {
-      status?.classList.remove('hidden');
-      btn.disabled = true;
-      
-      // محاولة تحميل الإعلان مرة أخرى
-      if (window.Android && typeof window.Android.refreshRewardedAd === 'function') {
-        window.Android.refreshRewardedAd();
-      } else {
-        this.preloadAd();
-      }
-      
-      // انتظر 5 ثواني ثم حاول مجدداً
-      setTimeout(() => {
-        if (!this.isLoaded) {
-          status?.classList.add('hidden');
-          btn.disabled = false;
-          showMsg('⚠️ Ad not ready, please try again');
-        }
-      }, 5000);
-      return;
-    }
-    
-    btn.disabled = true;
+  const btn = document.getElementById('watchAdBtn');
+  const status = document.getElementById('adStatus');
+  
+  if (!this.isLoaded && !this.isTestMode) {
     status?.classList.remove('hidden');
+    btn.disabled = true;
     
-    if (this.isTestMode) {
-      setTimeout(() => this.onAdRewarded(), 1500);
-    }
-    else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
-      window.Android.showRewardedAd();
+    console.log('⚠️ Ad not loaded, trying to refresh...');
+    
+    // محاولة تحميل الإعلان مرة أخرى
+    if (window.Android && typeof window.Android.refreshRewardedAd === 'function') {
+      console.log('🔄 Calling Android.refreshRewardedAd()');
+      window.Android.refreshRewardedAd();
+    } else if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
+      console.log('🔄 Calling Android.loadRewardedAd()');
+      window.Android.loadRewardedAd();
     } else {
-      setTimeout(() => this.onAdRewarded(), 1500);
+      console.log('❌ No Android bridge available');
     }
-  },
+    
+    // انتظر 5 ثواني ثم حاول مجدداً
+    setTimeout(() => {
+      if (!this.isLoaded) {
+        status?.classList.add('hidden');
+        btn.disabled = false;
+        showMsg('⚠️ Ad not ready, please try again');
+      }
+    }, 5000);
+    return;
+  }
+  
+  btn.disabled = true;
+  status?.classList.remove('hidden');
+  
+  if (this.isTestMode) {
+    setTimeout(() => this.onAdRewarded(), 1500);
+  }
+  else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
+    console.log('🎬 Calling Android.showRewardedAd()');
+    window.Android.showRewardedAd();
+  } else {
+    console.log('❌ Android.showRewardedAd not available');
+    setTimeout(() => this.onAdRewarded(), 1500);
+  }
+},
   
   // ✅ RESET AD STATE - NEW FUNCTION
   resetAdState: function() {
