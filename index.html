@@ -417,7 +417,10 @@
     };
     setInterval(() => PremiumTime.cleanup(), 5 * 60 * 1000);
 
-// ============================================
+    // ============================================
+    // 🎬 Rewarded Ads Manager - FULL UPDATED
+    // ============================================
+    // ============================================
 // 🎬 Rewarded Ads Manager - COMPLETE CODE
 // ============================================
 const RewardedAds = {
@@ -533,26 +536,11 @@ const RewardedAds = {
   },
   
   enterCategory: function() {
-  console.log('[ENTER] enterCategory() called');
-  console.log('[ENTER] currentCategoryId:', this.currentCategoryId);
-  
-  if (!this.currentCategoryId) {
-    console.error('[ENTER] ERROR: No currentCategoryId!');
-    return;
-  }
-  
-  const categoryName = document.getElementById('premiumTitle')?.textContent || 'Loading...';
-  console.log('[ENTER] Category name:', categoryName);
-  
-  try {
-    console.log('[ENTER] Calling Channels.load()...');
-    Channels.load(this.currentCategoryId, categoryName);
-    console.log('[ENTER] Channels.load() completed');
-  } catch (error) {
-    console.error('[ENTER] ERROR in Channels.load():', error);
-    showMsg('❌ Failed to load category');
-  }
-},
+    if (!this.currentCategoryId) return;
+    Channels.load(this.currentCategoryId, document.getElementById('premiumTitle')?.textContent);
+    this.startConsumptionTimer(this.currentCategoryId);
+    this.startTimerDisplay(this.currentCategoryId);
+  },
   
   startTimerDisplay: function(categoryId) {
     const existing = document.querySelector('.premium-timer');
@@ -596,80 +584,66 @@ const RewardedAds = {
   
   // ✅ PRELOAD AD - MODIFIED
   preloadAd: function() {
-  if (!CONFIG.REWARDED_ADS.enabled) return;
-  
-  // تنظيف الإعلان القديم
-  this.isLoaded = false;
-  
-  if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
-    console.log('✅ Android bridge found, loading ad...');
-    window.Android.loadRewardedAd();
+    if (!CONFIG.REWARDED_ADS.enabled) return;
     
-    // مهلة: إذا لم يتم تحميل الإعلان خلال 10 ثواني، حاول مجدداً
-    setTimeout(() => {
-      if (!this.isLoaded) {
-        console.log('⚠️ Ad loading timeout, retrying...');
-        window.Android.loadRewardedAd();
-      }
-    }, 10000);
-  } else {
-    console.log('⚠️ Android bridge not available - Retrying in 3s...');
-    this.isLoaded = false;  // ✅ تغيير: اتركه false
+    // تنظيف الإعلان القديم
+    this.isLoaded = false;
     
-    // حاول مجدداً بعد 3 ثواني
-    setTimeout(() => {
-      this.preloadAd();
-    }, 3000);
-  }
-},
+    if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
+      window.Android.loadRewardedAd();
+      
+      // مهلة: إذا لم يتم تحميل الإعلان خلال 10 ثواني، حاول مجدداً
+      setTimeout(() => {
+        if (!this.isLoaded) {
+          console.log('⚠️ Ad loading timeout, retrying...');
+          window.Android.loadRewardedAd();
+        }
+      }, 10000);
+    } else {
+      console.log('⚠️ Android bridge not available');
+      this.isLoaded = true;
+    }
+  },
   
   // ✅ SHOW AD - MODIFIED
   showAd: function() {
-  const btn = document.getElementById('watchAdBtn');
-  const status = document.getElementById('adStatus');
-  
-  if (!this.isLoaded && !this.isTestMode) {
-    status?.classList.remove('hidden');
-    btn.disabled = true;
+    const btn = document.getElementById('watchAdBtn');
+    const status = document.getElementById('adStatus');
     
-    console.log('⚠️ Ad not loaded, trying to refresh...');
-    
-    // محاولة تحميل الإعلان مرة أخرى
-    if (window.Android && typeof window.Android.refreshRewardedAd === 'function') {
-      console.log('🔄 Calling Android.refreshRewardedAd()');
-      window.Android.refreshRewardedAd();
-    } else if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
-      console.log('🔄 Calling Android.loadRewardedAd()');
-      window.Android.loadRewardedAd();
-    } else {
-      console.log('❌ No Android bridge available');
+    if (!this.isLoaded && !this.isTestMode) {
+      status?.classList.remove('hidden');
+      btn.disabled = true;
+      
+      // محاولة تحميل الإعلان مرة أخرى
+      if (window.Android && typeof window.Android.refreshRewardedAd === 'function') {
+        window.Android.refreshRewardedAd();
+      } else {
+        this.preloadAd();
+      }
+      
+      // انتظر 5 ثواني ثم حاول مجدداً
+      setTimeout(() => {
+        if (!this.isLoaded) {
+          status?.classList.add('hidden');
+          btn.disabled = false;
+          showMsg('⚠️ Ad not ready, please try again');
+        }
+      }, 5000);
+      return;
     }
     
-    // انتظر 5 ثواني ثم حاول مجدداً
-    setTimeout(() => {
-      if (!this.isLoaded) {
-        status?.classList.add('hidden');
-        btn.disabled = false;
-        showMsg('⚠️ Ad not ready, please try again');
-      }
-    }, 5000);
-    return;
-  }
-  
-  btn.disabled = true;
-  status?.classList.remove('hidden');
-  
-  if (this.isTestMode) {
-    setTimeout(() => this.onAdRewarded(), 1500);
-  }
-  else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
-    console.log('🎬 Calling Android.showRewardedAd()');
-    window.Android.showRewardedAd();
-  } else {
-    console.log('❌ Android.showRewardedAd not available');
-    setTimeout(() => this.onAdRewarded(), 1500);
-  }
-},
+    btn.disabled = true;
+    status?.classList.remove('hidden');
+    
+    if (this.isTestMode) {
+      setTimeout(() => this.onAdRewarded(), 1500);
+    }
+    else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
+      window.Android.showRewardedAd();
+    } else {
+      setTimeout(() => this.onAdRewarded(), 1500);
+    }
+  },
   
   // ✅ RESET AD STATE - NEW FUNCTION
   resetAdState: function() {
@@ -698,43 +672,17 @@ const RewardedAds = {
   
   // ✅ RECEIVE FROM ANDROID - AD REWARDED
   onAdRewarded: function() {
-  console.log('🎉 [REWARDED] Ad rewarded callback received!');
-  console.log('[REWARDED] currentCategoryId:', this.currentCategoryId);
-  console.log('[REWARDED] stackEnabled:', CONFIG.REWARDED_ADS.stackEnabled);
-  
-  if (!this.currentCategoryId) {
-    console.error('[REWARDED] ERROR: No currentCategoryId!');
-    showMsg('⚠️ Error: No category selected');
-    return;
-  }
-  
-  try {
-    console.log('[REWARDED] Adding minutes to PremiumTime...');
+    console.log('🎉 Ad rewarded from Android');
+    if (!this.currentCategoryId) return;
     const newTotal = PremiumTime.add(this.currentCategoryId, CONFIG.REWARDED_ADS.rewardMinutes);
-    console.log('[REWARDED] New total:', newTotal, 'minutes');
-    
-    console.log('[REWARDED] Hiding modal...');
     this.hideModal();
-    
-    if (CONFIG.REWARDED_ADS.stackEnabled) {
-      console.log('[REWARDED] Showing stack modal...');
-      this.showStackModal(newTotal);
-    } else { 
-      console.log('[REWARDED] Stack disabled, entering category directly...');
-      showMsg(`🎉 +${CONFIG.REWARDED_ADS.rewardMinutes} min! Balance: ${newTotal}`);
-      
-      console.log('[REWARDED] Calling enterCategory()...');
-      this.enterCategory();
+    if (CONFIG.REWARDED_ADS.stackEnabled) this.showStackModal(newTotal);
+    else { 
+      showMsg(`🎉 +${CONFIG.REWARDED_ADS.rewardMinutes} min! Balance: ${newTotal}`); 
+      this.enterCategory(); 
     }
-    
-    console.log('[REWARDED] Scheduling ad preload...');
     setTimeout(() => this.preloadAd(), 10000);
-    
-  } catch (error) {
-    console.error('[REWARDED] ERROR in onAdRewarded:', error);
-    showMsg('❌ Error processing reward');
-  }
-},
+  },
   
   // ✅ RECEIVE FROM ANDROID - AD NOT AVAILABLE
   onAdNotAvailable: function() {
@@ -973,52 +921,16 @@ const RewardedAds = {
         setTimeout(() => { const firstCard = els.channelsList.querySelector('.card'); if (firstCard && firstCard.focus) { firstCard.focus({ preventScroll: true }); if (state.isTV && firstCard.scrollIntoView) firstCard.scrollIntoView({ behavior: 'auto', block: 'nearest' }); } }, 50);
       },
       load: function(id, name) {
-  console.log('[CHANNELS] load() called with id:', id, 'name:', name);
-  
-  if (state.abortController && typeof state.abortController.abort === 'function') { 
-    try { 
-      state.abortController.abort(); 
-    } catch(e) { 
-      console.log('[CHANNELS] Abort error:', e);
-    } 
-  }
-  
-  if (els.channelsList) { 
-    console.log('[CHANNELS] Showing skeleton loader...');
-    els.channelsList.innerHTML = ''; 
-    els.channelsList.appendChild(Utils.createSkeleton(8)); 
-  }
-  
-  Utils.hideError();
-  
-  if (state.cachedChannels.has(id)) { 
-    console.log('[CHANNELS] Using cached data...');
-    Channels.render(state.cachedChannels.get(id), name, id); 
-    return; 
-  }
-  
-  console.log('[CHANNELS] Fetching from API...');
-  const apiUrl = API.buildUrl('get_live_streams', {category_id: id});
-  console.log('[CHANNELS] API URL:', apiUrl);
-  
-  API.fetchWithRetry(apiUrl).then(data => {
-    console.log('[CHANNELS] API response received');
-    const streams = Array.isArray(data) ? data : (data.streams || []);
-    console.log('[CHANNELS] Streams count:', streams.length);
-    
-    if (state.cachedChannels.size >= CONFIG.MAX_CACHE_ITEMS) { 
-      const firstKey = state.cachedChannels.keys().next().value; 
-      state.cachedChannels.delete(firstKey); 
-    }
-    state.cachedChannels.set(id, streams); 
-    Channels.render(streams, name, id);
-    console.log('[CHANNELS] Render completed');
-  }).catch(err => { 
-    console.error('[CHANNELS] Fetch error:', err); 
-    Utils.showError('Failed to load channels. Check connection.', () => Channels.load(id, name)); 
-    if (els.channelsList) els.channelsList.innerHTML = ''; 
-  });
-},
+        if (state.abortController && typeof state.abortController.abort === 'function') { try { state.abortController.abort(); } catch(e) {} }
+        if (els.channelsList) { els.channelsList.innerHTML = ''; els.channelsList.appendChild(Utils.createSkeleton(8)); }
+        Utils.hideError();
+        if (state.cachedChannels.has(id)) { Channels.render(state.cachedChannels.get(id), name, id); return; }
+        API.fetchWithRetry(API.buildUrl('get_live_streams', {category_id: id})).then(data => {
+          const streams = Array.isArray(data) ? data : (data.streams || []);
+          if (state.cachedChannels.size >= CONFIG.MAX_CACHE_ITEMS) { const firstKey = state.cachedChannels.keys().next().value; state.cachedChannels.delete(firstKey); }
+          state.cachedChannels.set(id, streams); Channels.render(streams, name, id);
+        }).catch(err => { console.error('Failed to load channels:', err); Utils.showError('Failed to load channels. Check connection.', () => Channels.load(id, name)); if (els.channelsList) els.channelsList.innerHTML = ''; });
+      },
       show: function(id, name) {
         if (state.isLoading) return; state.isLoading = true;
         RewardedAds.cleanup();
@@ -1169,73 +1081,5 @@ const RewardedAds = {
     document.addEventListener('dblclick', function(e) { if (state.isTV) e.preventDefault(); }, { passive: false });
     })();
   </script>
-  
-  <!-- 🐛 Debug Console Overlay -->
-<div id="debugConsole" style="
-  position: fixed;
-  bottom: 60px;
-  left: 10px;
-  right: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-  background: rgba(0,0,0,0.9);
-  color: #0f0;
-  font-family: monospace;
-  font-size: 11px;
-  padding: 8px;
-  border-radius: 8px;
-  z-index: 999999;
-  display: none;
-  border: 1px solid #0f0;
-"></div>
-<button onclick="toggleDebug()" style="
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  z-index: 999999;
-  background: #0f0;
-  color: #000;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-weight: bold;
-  cursor: pointer;
-">🐛 Debug</button>
-<script>
-function toggleDebug() {
-  const debug = document.getElementById('debugConsole');
-  debug.style.display = debug.style.display === 'none' ? 'block' : 'none';
-}
-// Override console.log to show on screen
-(function() {
-  const oldLog = console.log;
-  const oldError = console.error;
-  const debugDiv = document.getElementById('debugConsole');
-  
-  console.log = function(message) {
-    oldLog.apply(console, arguments);
-    if (debugDiv) {
-      const line = document.createElement('div');
-      line.textContent = '📝 ' + message;
-      line.style.margin = '2px 0';
-      debugDiv.appendChild(line);
-      debugDiv.scrollTop = debugDiv.scrollHeight;
-    }
-  };
-  
-  console.error = function(message) {
-    oldError.apply(console, arguments);
-    if (debugDiv) {
-      const line = document.createElement('div');
-      line.textContent = '❌ ' + message;
-      line.style.color = '#f00';
-      line.style.margin = '2px 0';
-      debugDiv.appendChild(line);
-      debugDiv.scrollTop = debugDiv.scrollHeight;
-    }
-  };
-})();
-</script>
-  
 </body>
 </html>
