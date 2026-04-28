@@ -1097,38 +1097,27 @@ const RewardedAds = {
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', App.init, { once: true }); } else { App.init(); }
     window.addEventListener('beforeunload', () => App.destroy(), { once: true });
     document.addEventListener('dblclick', function(e) { if (state.isTV) e.preventDefault(); }, { passive: false });
+     // ✅ اجعل هذه الكائنات متاحة عالمياً للدوال الخارجية
+window.Channels = Channels;
+window.PremiumTime = PremiumTime;           
     })();
   </script>
 <script>
-// ✅ دالة عالمية ينفذها الأندرويد مباشرة بعد انتهاء الإعلان
 window.unlockCategory = function(catId, catName) {
-  console.log('🔓 [GLOBAL] Unlocking category:', catId, catName);
+  console.log('🔓 [GLOBAL] Unlocking:', catId, catName);
   try {
-    // 1. أغلق المودال فوراً
-    const modal = document.getElementById('premiumModal');
-    if (modal) modal.classList.add('hidden');
+    // 1. أغلق المودال وحالة التحميل
+    document.getElementById('premiumModal')?.classList.add('hidden');
+    document.getElementById('adStatus')?.classList.add('hidden');
     
-    // 2. أخفِ حالة التحميل
-    const status = document.getElementById('adStatus');
-    if (status) status.classList.add('hidden');
+    // 2. أضف الوقت وحمّل القنوات باستخدام النسخ العالمية
+    if (window.PremiumTime) window.PremiumTime.add(catId, 30);
+    if (window.Channels) window.Channels.load(catId, catName);
     
-    // 3. أضف الوقت للرصيد
-    if (typeof PremiumTime !== 'undefined' && catId) {
-      const newTotal = PremiumTime.add(catId, 30);
-      console.log('⏱️ Time added:', newTotal, 'minutes');
-    }
-    
-    // 4. افتح الفئة مباشرة
-    if (typeof Channels !== 'undefined' && typeof Channels.load === 'function') {
-      Channels.load(catId, catName);
-    }
-    
-    // 5. رسالة نجاح
-    if (typeof showMsg === 'function') {
-      showMsg('🎉 Unlocked! Enjoy watching.');
-    }
-  } catch (err) {
-    console.error('❌ Unlock error:', err);
+    // 3. رسالة النجاح
+    if (typeof showMsg === 'function') showMsg('🎉 Unlocked! Enjoy watching.');
+  } catch (e) {
+    console.error('❌ Unlock error:', e);
   }
 };
 </script>
