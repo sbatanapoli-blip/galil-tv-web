@@ -673,42 +673,35 @@ const RewardedAds = {
   
   // ✅ RECEIVE FROM ANDROID - AD REWARDED
   onAdRewarded: function() {
-    console.log('🎉 Ad rewarded - entering category NOW');
+    console.log('🎉 [JS] onAdRewarded triggered successfully!');
     
-    if (!this.currentCategoryId) {
-        console.error('❌ No category ID!');
-        return;
+    try {
+        // 1. إضافة الوقت للرصيد
+        if (this.currentCategoryId) {
+            const newTotal = PremiumTime.add(this.currentCategoryId, CONFIG.REWARDED_ADS.rewardMinutes);
+            console.log('[JS] ✅ Time added. New balance:', newTotal);
+        }
+
+        // 2. التأكد من إخفاء أي حالة تحميل متبقية
+        const status = document.getElementById('adStatus');
+        if (status) status.classList.add('hidden');
+
+        // 3. إظهار Stack Modal أو الدخول المباشر للفئة
+        if (CONFIG.REWARDED_ADS.stackEnabled) {
+            this.showStackModal(PremiumTime.get(this.currentCategoryId));
+        } else {
+            showMsg('🎉 Unlocked! Enjoy watching.');
+            this.enterCategory();
+        }
+
+        // 4. تجهيز إعلان جديد للمرة القادمة
+        setTimeout(() => this.preloadAd(), 5000);
+        
+    } catch (err) {
+        console.error('[JS] ❌ Fatal error in onAdRewarded:', err);
+        showMsg('❌ Error processing reward');
     }
-    
-    // ✅ أضف الوقت للمستخدم
-    var newTotal = PremiumTime.add(this.currentCategoryId, CONFIG.REWARDED_ADS.rewardMinutes);
-    console.log('✅ Time added: ' + newTotal + ' minutes');
-    
-    // ✅ أغلق الـ modal
-    this.hideModal();
-    
-    // ✅ **الخطوة المهمة**: افتح الفئة فوراً
-    var categoryName = document.getElementById('premiumTitle')?.textContent || 'Premium Category';
-    console.log('🚀 Opening category: ' + this.currentCategoryId);
-    
-    // ✅ تأكد من وجود Channels قبل الاستدعاء
-    if (typeof Channels !== 'undefined' && Channels.load) {
-        Channels.load(this.currentCategoryId, categoryName);
-        this.startConsumptionTimer(this.currentCategoryId);
-        this.startTimerDisplay(this.currentCategoryId);
-        console.log('✅ Category opened successfully!');
-    } else {
-        console.error('❌ Channels.load not found');
-        // محاولة بديلة
-        window.location.href = '#channels';
-    }
-    
-    // ✅ امسح الـ currentCategoryId لمنع التكرار
-    this.currentCategoryId = null;
-    
-    // ✅ حمّل إعلاناً جديداً للمرة القادمة
-    setTimeout(() => { this.preloadAd(); }, 5000);
-},
+  }
   
   // ✅ RECEIVE FROM ANDROID - AD NOT AVAILABLE
   onAdNotAvailable: function() {
