@@ -623,26 +623,26 @@ const RewardedAds = {
   
   // ✅ PRELOAD AD - MODIFIED
   preloadAd: function() {
-    if (!CONFIG.REWARDED_ADS.enabled) return;
-    
-    // تنظيف الإعلان القديم
+    console.log('🔄 Preloading rewarded ad...');
     this.isLoaded = false;
     
     if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
-      window.Android.loadRewardedAd();
-      
-      // مهلة: إذا لم يتم تحميل الإعلان خلال 10 ثواني، حاول مجدداً
-      setTimeout(() => {
-        if (!this.isLoaded) {
-          console.log('⚠️ Ad loading timeout, retrying...');
-          window.Android.loadRewardedAd();
-        }
-      }, 10000);
+        window.Android.loadRewardedAd();
+        
+        // مهلة 8 ثواني: إذا لم يتم التحميل، جرب مرة أخرى
+        setTimeout(() => {
+            if (!this.isLoaded) {
+                console.log('⚠️ Ad loading timeout, retrying...');
+                window.Android.loadRewardedAd();
+            }
+        }, 8000);
     } else {
-      console.log('⚠️ Android bridge not available');
-      this.isLoaded = true;
+        console.log('⚠️ Android bridge not available, using test mode');
+        this.isLoaded = true;  // وضع اختبار إذا لم يكن bridge موجوداً
+        const btn = document.getElementById('watchAdBtn');
+        if (btn) btn.disabled = false;
     }
-  },
+},
   
   // ✅ SHOW AD - MODIFIED
   showAd: function() {
@@ -695,10 +695,13 @@ const RewardedAds = {
     console.log('✅ Ad loaded from Android');
     this.isLoaded = true;
     const btn = document.getElementById('watchAdBtn');
-    if (btn) btn.disabled = false;
+    if (btn) {
+        btn.disabled = false;
+        console.log('✅ Button enabled now');
+    }
     const status = document.getElementById('adStatus');
     if (status) status.classList.add('hidden');
-  },
+},
   
   // ✅ RECEIVE FROM ANDROID - AD FAILED
   onAdFailed: function() {
