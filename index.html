@@ -416,36 +416,10 @@
       }
     };
     setInterval(() => PremiumTime.cleanup(), 5 * 60 * 1000);
-      
-      // ✅ Global callbacks for safety
-window.onAdRewarded = function() {
-    console.log('🌍 Global onAdRewarded triggered');
-    if (window.RewardedAds && window.RewardedAds.onAdRewarded) {
-        window.RewardedAds.onAdRewarded();
-    }
-};
 
-window.onAdLoaded = function() {
-    console.log('🌍 Global onAdLoaded triggered');
-    if (window.RewardedAds && window.RewardedAds.onAdLoaded) {
-        window.RewardedAds.onAdLoaded();
-    }
-};
-
-window.onAdFailed = function() {
-    console.log('🌍 Global onAdFailed triggered');
-    if (window.RewardedAds && window.RewardedAds.onAdFailed) {
-        window.RewardedAds.onAdFailed();
-    }
-};
-
-window.onAdNotAvailable = function() {
-    console.log('🌍 Global onAdNotAvailable triggered');
-    if (window.RewardedAds && window.RewardedAds.onAdNotAvailable) {
-        window.RewardedAds.onAdNotAvailable();
-    }
-};
-
+    // ============================================
+    // 🎬 Rewarded Ads Manager - FULL UPDATED
+    // ============================================
     // ============================================
 // 🎬 Rewarded Ads Manager - COMPLETE CODE
 // ============================================
@@ -489,10 +463,11 @@ const RewardedAds = {
   },
   
   hideModal: function() {
-    const modal = document.getElementById('premiumModal');
+    var modal = document.getElementById('premiumModal');
     if (modal) modal.classList.add('hidden');
-    document.getElementById('adStatus')?.classList.add('hidden');
-  },
+    var adStatus = document.getElementById('adStatus');
+    if (adStatus) adStatus.classList.add('hidden');
+},
   
   setupModalListeners: function() {
     const closeBtn = document.getElementById('modalCloseBtn');
@@ -562,24 +537,11 @@ const RewardedAds = {
   },
   
   enterCategory: function() {
-    console.log('🚪 enterCategory called, categoryId:', this.currentCategoryId);
-    if (!this.currentCategoryId) {
-        console.error('❌ Cannot enter category: no ID');
-        return;
-    }
-    var categoryName = document.getElementById('premiumTitle')?.textContent || 'Channels';
-    console.log('📺 Loading category:', this.currentCategoryId, categoryName);
-    
-    // ✅ تأكيد أن Channels موجودة
-    if (typeof Channels !== 'undefined' && Channels.load) {
-        Channels.load(this.currentCategoryId, categoryName);
-        this.startConsumptionTimer(this.currentCategoryId);
-        this.startTimerDisplay(this.currentCategoryId);
-        console.log('✅ Category opened successfully');
-    } else {
-        console.error('❌ Channels.load not available');
-    }
-},
+    if (!this.currentCategoryId) return;
+    Channels.load(this.currentCategoryId, document.getElementById('premiumTitle')?.textContent);
+    this.startConsumptionTimer(this.currentCategoryId);
+    this.startTimerDisplay(this.currentCategoryId);
+  },
   
   startTimerDisplay: function(categoryId) {
     const existing = document.querySelector('.premium-timer');
@@ -623,26 +585,26 @@ const RewardedAds = {
   
   // ✅ PRELOAD AD - MODIFIED
   preloadAd: function() {
-    console.log('🔄 Preloading rewarded ad...');
+    if (!CONFIG.REWARDED_ADS.enabled) return;
+    
+    // تنظيف الإعلان القديم
     this.isLoaded = false;
     
     if (window.Android && typeof window.Android.loadRewardedAd === 'function') {
-        window.Android.loadRewardedAd();
-        
-        // مهلة 8 ثواني: إذا لم يتم التحميل، جرب مرة أخرى
-        setTimeout(() => {
-            if (!this.isLoaded) {
-                console.log('⚠️ Ad loading timeout, retrying...');
-                window.Android.loadRewardedAd();
-            }
-        }, 8000);
+      window.Android.loadRewardedAd();
+      
+      // مهلة: إذا لم يتم تحميل الإعلان خلال 10 ثواني، حاول مجدداً
+      setTimeout(() => {
+        if (!this.isLoaded) {
+          console.log('⚠️ Ad loading timeout, retrying...');
+          window.Android.loadRewardedAd();
+        }
+      }, 10000);
     } else {
-        console.log('⚠️ Android bridge not available, using test mode');
-        this.isLoaded = true;  // وضع اختبار إذا لم يكن bridge موجوداً
-        const btn = document.getElementById('watchAdBtn');
-        if (btn) btn.disabled = false;
+      console.log('⚠️ Android bridge not available');
+      this.isLoaded = true;
     }
-},
+  },
   
   // ✅ SHOW AD - MODIFIED
   showAd: function() {
@@ -695,13 +657,10 @@ const RewardedAds = {
     console.log('✅ Ad loaded from Android');
     this.isLoaded = true;
     const btn = document.getElementById('watchAdBtn');
-    if (btn) {
-        btn.disabled = false;
-        console.log('✅ Button enabled now');
-    }
+    if (btn) btn.disabled = false;
     const status = document.getElementById('adStatus');
     if (status) status.classList.add('hidden');
-},
+  },
   
   // ✅ RECEIVE FROM ANDROID - AD FAILED
   onAdFailed: function() {
@@ -714,22 +673,41 @@ const RewardedAds = {
   
   // ✅ RECEIVE FROM ANDROID - AD REWARDED
   onAdRewarded: function() {
-    console.log('🎉🎉🎉 Ad rewarded from Android - START');
+    console.log('🎉 Ad rewarded - entering category NOW');
+    
     if (!this.currentCategoryId) {
-        console.error('❌ No currentCategoryId, cannot proceed');
+        console.error('❌ No category ID!');
         return;
     }
+    
+    // ✅ أضف الوقت للمستخدم
     var newTotal = PremiumTime.add(this.currentCategoryId, CONFIG.REWARDED_ADS.rewardMinutes);
-    console.log('💰 New total minutes:', newTotal);
+    console.log('✅ Time added: ' + newTotal + ' minutes');
+    
+    // ✅ أغلق الـ modal
     this.hideModal();
-    if (CONFIG.REWARDED_ADS.stackEnabled) {
-        this.showStackModal(newTotal);
-    } else { 
-        showMsg('🎉 +' + CONFIG.REWARDED_ADS.rewardMinutes + ' min! Balance: ' + newTotal); 
-        console.log('🚀 Calling enterCategory now...');
-        this.enterCategory();
+    
+    // ✅ **الخطوة المهمة**: افتح الفئة فوراً
+    var categoryName = document.getElementById('premiumTitle')?.textContent || 'Premium Category';
+    console.log('🚀 Opening category: ' + this.currentCategoryId);
+    
+    // ✅ تأكد من وجود Channels قبل الاستدعاء
+    if (typeof Channels !== 'undefined' && Channels.load) {
+        Channels.load(this.currentCategoryId, categoryName);
+        this.startConsumptionTimer(this.currentCategoryId);
+        this.startTimerDisplay(this.currentCategoryId);
+        console.log('✅ Category opened successfully!');
+    } else {
+        console.error('❌ Channels.load not found');
+        // محاولة بديلة
+        window.location.href = '#channels';
     }
-    setTimeout(() => { this.preloadAd(); }, 10000);
+    
+    // ✅ امسح الـ currentCategoryId لمنع التكرار
+    this.currentCategoryId = null;
+    
+    // ✅ حمّل إعلاناً جديداً للمرة القادمة
+    setTimeout(() => { this.preloadAd(); }, 5000);
 },
   
   // ✅ RECEIVE FROM ANDROID - AD NOT AVAILABLE
