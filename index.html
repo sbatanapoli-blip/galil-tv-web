@@ -608,42 +608,41 @@ const RewardedAds = {
   
   // ✅ SHOW AD - MODIFIED
   showAd: function() {
-    const btn = document.getElementById('watchAdBtn');
-    const status = document.getElementById('adStatus');
-    
-    if (!this.isLoaded && !this.isTestMode) {
-      status?.classList.remove('hidden');
-      btn.disabled = true;
-      
-      // محاولة تحميل الإعلان مرة أخرى
-      if (window.Android && typeof window.Android.refreshRewardedAd === 'function') {
-        window.Android.refreshRewardedAd();
-      } else {
-        this.preloadAd();
-      }
-      
-      // انتظر 5 ثواني ثم حاول مجدداً
-      setTimeout(() => {
-        if (!this.isLoaded) {
-          status?.classList.add('hidden');
-          btn.disabled = false;
-          showMsg('⚠️ Ad not ready, please try again');
-        }
-      }, 5000);
-      return;
-    }
-    
-    btn.disabled = true;
+  const btn = document.getElementById('watchAdBtn');
+  const status = document.getElementById('adStatus');
+  
+  if (!this.isLoaded && !this.isTestMode) {
     status?.classList.remove('hidden');
-    
-    if (this.isTestMode) {
-      setTimeout(() => this.onAdRewarded(), 1500);
-    }
-    else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
-      window.Android.showRewardedAd();
+    btn.disabled = true;
+    if (window.Android && typeof window.Android.refreshRewardedAd === 'function') {
+      window.Android.refreshRewardedAd();
     } else {
-      setTimeout(() => this.onAdRewarded(), 1500);
+      this.preloadAd();
     }
+    setTimeout(() => {
+      if (!this.isLoaded) {
+        status?.classList.add('hidden');
+        btn.disabled = false;
+        showMsg('⚠️ Ad not ready, please try again');
+      }
+    }, 5000);
+    return;
+  }
+  
+  btn.disabled = true;
+  status?.classList.remove('hidden');
+  
+  if (this.isTestMode) {
+    setTimeout(() => this.onAdRewarded(), 1500);
+  } else if (window.Android && typeof window.Android.showRewardedAd === 'function') {
+    // ✅ نمرر المعرف والاسم للأندرويد مباشرة
+    const id = this.currentCategoryId || '388';
+    const name = document.getElementById('premiumTitle')?.textContent || 'Premium';
+    console.log('📡 Passing to Android:', id, name);
+    window.Android.showRewardedAd(id, name);
+  } else {
+    setTimeout(() => this.onAdRewarded(), 1500);
+  }
   },
   
   // ✅ RESET AD STATE - NEW FUNCTION
@@ -1100,5 +1099,39 @@ const RewardedAds = {
     document.addEventListener('dblclick', function(e) { if (state.isTV) e.preventDefault(); }, { passive: false });
     })();
   </script>
+<script>
+// ✅ دالة عالمية ينفذها الأندرويد مباشرة بعد انتهاء الإعلان
+window.unlockCategory = function(catId, catName) {
+  console.log('🔓 [GLOBAL] Unlocking category:', catId, catName);
+  try {
+    // 1. أغلق المودال فوراً
+    const modal = document.getElementById('premiumModal');
+    if (modal) modal.classList.add('hidden');
+    
+    // 2. أخفِ حالة التحميل
+    const status = document.getElementById('adStatus');
+    if (status) status.classList.add('hidden');
+    
+    // 3. أضف الوقت للرصيد
+    if (typeof PremiumTime !== 'undefined' && catId) {
+      const newTotal = PremiumTime.add(catId, 30);
+      console.log('⏱️ Time added:', newTotal, 'minutes');
+    }
+    
+    // 4. افتح الفئة مباشرة
+    if (typeof Channels !== 'undefined' && typeof Channels.load === 'function') {
+      Channels.load(catId, catName);
+    }
+    
+    // 5. رسالة نجاح
+    if (typeof showMsg === 'function') {
+      showMsg('🎉 Unlocked! Enjoy watching.');
+    }
+  } catch (err) {
+    console.error('❌ Unlock error:', err);
+  }
+};
+</script>
+  
 </body>
 </html>
